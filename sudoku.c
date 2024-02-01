@@ -2,7 +2,21 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "solvesudoku.h"
-
+struct stack{
+    int row;
+    int col;
+    struct stack* next;
+};
+struct stack* top=NULL;
+void undo(int** puzzle,struct stack** top){
+    if(!(*top)){
+        return;
+    }
+    else{
+        puzzle[(*top)->row][(*top)->col]=0;
+        *top=(*top)->next;
+    }
+}
 int** createPuzzle(){
     int i, j;
     int** puzzle;
@@ -140,7 +154,7 @@ void userChoice(int** userPuzzle, int** tempPuzzle){
     }
 
     while(1){
-        printf("\nPress Enter to continue. Press \"q\" to Quit.\n");
+        printf("\nPress Enter to continue. Press \"q\" to Quit. Press \"u\" to Undo\n");
         c = getchar();
         if((c == 'q') || (c == 'Q')){
             getchar();
@@ -149,8 +163,13 @@ void userChoice(int** userPuzzle, int** tempPuzzle){
             printPuzzle(userPuzzle);
             return;
         }
-        else if((c != '\n') && (c != 'q'))
+        else if(c=='u' || c=='U'){
             getchar();
+            undo(userPuzzle,&top);
+            printPuzzle(userPuzzle);
+        }
+        else if((c != '\n') && (c != 'q'))
+            getchar(); 
         else
             break;
     }
@@ -181,21 +200,17 @@ void userChoice(int** userPuzzle, int** tempPuzzle){
         else break;
     }
 
-    if(checkBox(userPuzzle, positionY, positionX, userVal))
+    if(checkBox(userPuzzle, positionY, positionX, userVal)){
+        struct stack* new=malloc(sizeof(struct stack));
+        new->row=positionY;
+        new->col=positionX;
+        new->next=top;
+        top=new;
         userPuzzle[positionY][positionX] = userVal;
+        }
     else
         printf("\nincorrect value for the X = %d Y = %d coordinate, please try again\n",positionX + 1, positionY + 1);
 
-    for (i = 0; i < 9; i++){
-        for(j = 0; j < 9; j++){
-            tempPuzzle[i][j] = userPuzzle[i][j];
-        }
-    }
-
-    if(!solvePuzzle(tempPuzzle)){
-        printf("\nincorrect value for the X = %d Y = %d coordinate, please try again\n",positionX + 1, positionY + 1);
-        userPuzzle[positionY][positionX] = 0;
-    }
     getchar();
     printPuzzle(userPuzzle);
     }
